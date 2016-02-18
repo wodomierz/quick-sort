@@ -29,7 +29,7 @@ int main(){
 }
 
 void test0() {
-  int n = 32;
+  int n = 1024;
   int *c = (int*) malloc(n*sizeof(int));
   for (int j=0; j<n; ++j) {
       c[j] = n-j;

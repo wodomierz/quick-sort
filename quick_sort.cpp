@@ -52,7 +52,7 @@ int* quick_sort(int* to_sort, int size){
     cuMemHostRegister((void*) result, size*sizeof(int), 0);
     cuMemHostRegister((void*) to_sort, size*sizeof(int), 0);
 
-    CUdeviceptr deviceToSort;
+    CUdeviceptr device_to_sort;
     CUdeviceptr height;
     CUdeviceptr tree_size;
     CUdeviceptr parent;
@@ -63,7 +63,7 @@ int* quick_sort(int* to_sort, int size){
     CUdeviceptr result_array;
     CUdeviceptr indexes;
 
-    cuMemAlloc(&deviceToSort, size*sizeof(int));
+    cuMemAlloc(&device_to_sort, size*sizeof(int));
     cuMemAlloc(&height, size*sizeof(int));
     cuMemAlloc(&tree_size, size*sizeof(int));
     cuMemAlloc(&parent, size*sizeof(int));
@@ -74,14 +74,14 @@ int* quick_sort(int* to_sort, int size){
     cuMemAlloc(&result_array, size*sizeof(int));
     cuMemAlloc(&indexes, size*sizeof(int));
 
-    print_error(cuMemcpyHtoD(deviceToSort, (void*) to_sort, size * sizeof(int)));
+    print_error(cuMemcpyHtoD(device_to_sort, (void*) to_sort, size * sizeof(int)));
 
 
     int root = (rand() % size);
     printf("root %d\n", root);
 
     void* init_args[8] =  { &parent, &left, &right, &tree_size, &height, &computed, &size, &root};
-    void* sort_args[9] =  { &deviceToSort, &parent, &left, &right, &tree_size, &height, &computed, &sth_changed, &size};
+    void* sort_args[9] =  { &device_to_sort, &parent, &left, &right, &tree_size, &height, &computed, &sth_changed, &size};
 
 
     print_error(cuLaunchKernel(init, numberOfBlocks, 1, 1, THREADS_IN_BLOCK, 1, 1, 0, 0, init_args, 0));
@@ -106,7 +106,7 @@ int* quick_sort(int* to_sort, int size){
         }
     }
     int h = 0;
-    void tree_to_array_args[10] = { &tree, &result_array, &indexes, &parent, &left, &tree_size, &height, &h, &sth_changed, &size}
+    void* tree_to_array_args[10] = { &device_to_sort, &result_array, &indexes, &parent, &left, &tree_size, &height, &h, &sth_changed, &size};
     while (true) {
         bool changed = false;
         print_error(cuMemcpyHtoD(sth_changed, &changed, sizeof(bool)));
@@ -118,6 +118,7 @@ int* quick_sort(int* to_sort, int size){
         if (not changed) {
            break;
         }
+        h++;
     }
 
    
@@ -125,7 +126,7 @@ int* quick_sort(int* to_sort, int size){
     print_error(cuMemcpyDtoH((void*)result, result_array, size * sizeof(int)));
 
 
-    cuMemFree(deviceToSort);
+    cuMemFree(device_to_sort);
     cuMemFree(height);
     cuMemFree(tree_size);
     cuMemFree(parent);
@@ -135,7 +136,7 @@ int* quick_sort(int* to_sort, int size){
     cuMemFree(sth_changed);
     cuMemFree(result_array);
     cuMemFree(indexes);
-    
+
     cuMemHostUnregister(result);
     cuMemHostUnregister(to_sort);
     cuCtxDestroy(cuContext);

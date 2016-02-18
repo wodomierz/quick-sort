@@ -38,15 +38,12 @@ void quick_sort(int* to_sort, int* parent, int* left, int* right, int* tree_size
 		return;
 	}
 
-	printf("kurwa\n");
-
 	*sth_changed = true;
 
 	//I assume that I have parrent
 	int parent_id = parent[thid];
 	int my_value = to_sort[thid];
 	int parent_value = to_sort[parent_id];
-	// printf("kurwa\n");
 
 	bool is_left = false;
 	if ( my_value < parent_value 
@@ -62,15 +59,12 @@ void quick_sort(int* to_sort, int* parent, int* left, int* right, int* tree_size
 
 	if (is_left) {
 		int left_parent = left[parent_id];
-		// printf("%d\n", left_parent);
 		if (thid == left_parent) {
-			printf("%d\n", left_parent);
+			// printf("%d\n", left_parent);
 			computed[thid] = true;
 			height[thid] = height[parent_id] + 1;
-			// atomicAdd(tree_size + left_parent, 1);  //or init treesaize with 1
 		}
 		else {
-			// printf("%d\n", left_parent);
 			parent[thid] = left_parent;
 			atomicAdd(tree_size + left_parent, 1);
 		}
@@ -83,13 +77,11 @@ void quick_sort(int* to_sort, int* parent, int* left, int* right, int* tree_size
 
 	int right_parent = right[parent_id];
 	if (thid == right_parent) {
-		printf("%d\n", right_parent);
+		// printf("%d\n", right_parent);
 		computed[thid] = true;
 		height[thid] = height[parent_id] + 1;
-		// atomicAdd(tree_size + right_parent, 1);  //or init treesaize with 1
 	}
 	else {
-		// printf("%d\n", right_parent);
 		parent[thid] = right_parent;
 		atomicAdd(tree_size + right_parent, 1);
 	}
