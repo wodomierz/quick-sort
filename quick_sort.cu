@@ -11,21 +11,22 @@ static int THREADS_IN_BLOCK = 1024;
 //index - size of left tree
 
 __global__
-void init(int* parent, int* right, int* left, int* tree_size, int* height, bool* computed, int size, int root) {
+void init(int* parent, int* right, int* left, int* tree_size, int* height, bool* computed, int size, int* roots) {
 	int thid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (thid >= size) {
 		return;
 	}
 
-	root = blockIdx.x * blockDim.x + root;
-	if (root >= size) {
-		root = blockIdx.x * blockDim.x;
-	}
+	// root = blockIdx.x * blockDim.x + root;
+	// if (root >= size) {
+		// root = blockIdx.x * blockDim.x;
+	// }
 
-	// __syncthreads();
-	// atomicExch(root_adress + blockIdx, thid);
-	// __syncthreads();
+	__syncthreads();
+	atomicExch(roots + blockIdx.x, thid);
+	__syncthreads();
 
+	int root = roots[blockIdx.x];
 	if (thid == root) {
 		computed[thid] = true;
 		parent[thid] = -1;

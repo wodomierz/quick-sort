@@ -65,7 +65,7 @@ void quick_sort(CUdeviceptr device_to_sort, int size, CUdeviceptr result_array) 
     CUdeviceptr sth_changed;
     // CUdeviceptr result_array;
     CUdeviceptr indexes;
-    // CUdeviceptr root;
+    CUdeviceptr root;
     // cuMemAlloc(&device_to_sort, size*sizeof(int));
     cuMemAlloc(&height, size*sizeof(int));
     cuMemAlloc(&tree_size, size*sizeof(int));
@@ -76,12 +76,12 @@ void quick_sort(CUdeviceptr device_to_sort, int size, CUdeviceptr result_array) 
     cuMemAlloc(&sth_changed, sizeof(bool));
     // cuMemAlloc(&result_array, size*sizeof(int));
     cuMemAlloc(&indexes, size*sizeof(int));
-    // cuMemAlloc(&root, sizeof(int));
+    cuMemAlloc(&root, numberOfBlocks*sizeof(int));
 
     // print_error(cuMemcpyHtoD(device_to_sort, (void*) to_sort, size * sizeof(int)));
 
-    srand( time( NULL ) );
-    int root = (rand() % THREADS_IN_BLOCK);
+    // srand( time( NULL ) );
+    // int root = (rand() % THREADS_IN_BLOCK);
 
     // printf("root %d\n", root);
 
@@ -133,7 +133,7 @@ void quick_sort(CUdeviceptr device_to_sort, int size, CUdeviceptr result_array) 
 
 
     // cuMemFree(device_to_sort);
-    // cuMemFree(root);
+    cuMemFree(root);
     cuMemFree(height);
     cuMemFree(tree_size);
     cuMemFree(parent);
