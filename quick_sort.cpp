@@ -10,6 +10,9 @@
 static int THREADS_IN_BLOCK = 1024;
 
 using namespace std;
+
+void print_error(CUresult res);
+
 int* quick_sort(int* to_sort, int size){
     cuInit(0);
     CUdevice cuDevice;
@@ -33,12 +36,13 @@ int* quick_sort(int* to_sort, int size){
     }
 
     CUfunction quick_sort;
-    res = cuModuleGetFunction(&quick_sort, cuModule, "quick_sort");
-    if (res != CUDA_SUCCESS) printf("some error %d\n", __LINE__);
+    print_error(cuModuleGetFunction(&quick_sort, cuModule, "quick_sort"));
 
     CUfunction init;
-    res = cuModuleGetFunction(&init, cuModule, "init");
-    if (res != CUDA_SUCCESS) printf("some error %d\n", __LINE__);
+    print_error(cuModuleGetFunction(&init, cuModule, "init"));
+
+    CUfunction tree_to_array;
+    print_error(cuModuleGetFunction(&tree_to_array, cuModule, "tree_to_array"));
 
     int numberOfBlocks = (size+THREADS_IN_BLOCK-1)/THREADS_IN_BLOCK;
 
@@ -48,9 +52,6 @@ int* quick_sort(int* to_sort, int size){
     cuMemHostRegister((void*) result, size*sizeof(int), 0);
     cuMemHostRegister((void*) to_sort, size*sizeof(int), 0);
 
-    bool* changed;
-    cuMemAllocHost((void**) &changed, sizeof(bool));
-
     CUdeviceptr deviceToSort;
     CUdeviceptr height;
     CUdeviceptr tree_size;
@@ -59,6 +60,8 @@ int* quick_sort(int* to_sort, int size){
     CUdeviceptr right;
     CUdeviceptr computed;
     CUdeviceptr sth_changed;
+    CUdeviceptr result_array;
+    CUdeviceptr indexes;
 
     cuMemAlloc(&deviceToSort, size*sizeof(int));
     cuMemAlloc(&height, size*sizeof(int));
@@ -68,47 +71,77 @@ int* quick_sort(int* to_sort, int size){
     cuMemAlloc(&right, size*sizeof(int));
     cuMemAlloc(&computed, size*sizeof(bool));
     cuMemAlloc(&sth_changed, sizeof(bool));
+    cuMemAlloc(&result_array, size*sizeof(int));
+    cuMemAlloc(&indexes, size*sizeof(int));
 
-    cuMemcpyHtoD(deviceToSort, (void*) to_sort, size * sizeof(int));
+    print_error(cuMemcpyHtoD(deviceToSort, (void*) to_sort, size * sizeof(int)));
 
 
     int root = (rand() % size);
-    void* init_args[6] =  { &parent, &tree_size, &height, &computed, &size, &root};
+    printf("root %d\n", root);
+
+    void* init_args[8] =  { &parent, &left, &right, &tree_size, &height, &computed, &size, &root};
     void* sort_args[9] =  { &deviceToSort, &parent, &left, &right, &tree_size, &height, &computed, &sth_changed, &size};
 
 
-    cuLaunchKernel(init, numberOfBlocks, 1, 1, THREADS_IN_BLOCK, 1, 1, 0, 0, init_args, 0);
-    cuCtxSynchronize();
+    print_error(cuLaunchKernel(init, numberOfBlocks, 1, 1, THREADS_IN_BLOCK, 1, 1, 0, 0, init_args, 0));
+    print_error(cuCtxSynchronize());
 
     // int n;
     // //fit n to power of 2
     // for (n = 1; n<size; n<<=1);
 
-    
+    int counter = 0;
     while (true) {
+        // printf("hello %d\n", counter++);
+        bool changed = false;
+        print_error(cuMemcpyHtoD(sth_changed, &changed, sizeof(bool)));
+
+        print_error(cuLaunchKernel(quick_sort, numberOfBlocks, 1, 1, THREADS_IN_BLOCK, 1, 1, 0, 0, sort_args, 0));
+        print_error(cuCtxSynchronize());
+
+        print_error(cuMemcpyDtoH(&changed, sth_changed, sizeof(bool)));
+        if (not changed) {
+           break;
+        }
+    }
+    int h = 0;
+    void tree_to_array_args[10] = { &tree, &result_array, &indexes, &parent, &left, &tree_size, &height, &h, &sth_changed, &size}
+    while (true) {
+        bool changed = false;
+        print_error(cuMemcpyHtoD(sth_changed, &changed, sizeof(bool)));
+
+        print_error(cuLaunchKernel(tree_to_array, numberOfBlocks, 1, 1, THREADS_IN_BLOCK, 1, 1, 0, 0, tree_to_array_args, 0));
+        print_error(cuCtxSynchronize());
         
-        *changed = false;
-        cuMemcpyHtoD(sth_changed, (void*) changed, sizeof(bool));
-
-        cuLaunchKernel(quick_sort, numberOfBlocks, 1, 1, THREADS_IN_BLOCK, 1, 1, 0, 0, init_args, 0);
-        cuCtxSynchronize();
-
-        cuMemcpyDtoH((void*) changed, sth_changed, sizeof(bool));
+        print_error(cuMemcpyDtoH(&changed, sth_changed, sizeof(bool)));
         if (not changed) {
            break;
         }
     }
 
-    
-
-
    
     
-    cuMemcpyDtoH((void*)result, deviceToSort, size * sizeof(int));
+    print_error(cuMemcpyDtoH((void*)result, result_array, size * sizeof(int)));
+
 
     cuMemFree(deviceToSort);
+    cuMemFree(height);
+    cuMemFree(tree_size);
+    cuMemFree(parent);
+    cuMemFree(left);
+    cuMemFree(right);
+    cuMemFree(computed);
+    cuMemFree(sth_changed);
+    cuMemFree(result_array);
+    cuMemFree(indexes);
+    
     cuMemHostUnregister(result);
     cuMemHostUnregister(to_sort);
     cuCtxDestroy(cuContext);
     return result;
+}
+
+void print_error(CUresult res) {
+    if (res != CUDA_SUCCESS) printf("some error %d\n", __LINE__);
 }

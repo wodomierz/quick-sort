@@ -29,7 +29,7 @@ int main(){
 }
 
 void test0() {
-  int n = 1024;
+  int n = 32;
   int *c = (int*) malloc(n*sizeof(int));
   for (int j=0; j<n; ++j) {
       c[j] = n-j;
@@ -37,10 +37,12 @@ void test0() {
   int* d = quick_sort(c, n);
   for (int j=0; j<(n-1); ++j) {
     if (d[j] > d[j + 1]) {
+      print(d, n);
       printf("test0 %d %d\n", d[j], d[j+1]);
     } 
     assert(d[j] <= d[j + 1]);
     if (d[j] +1 != d[j + 1]) {
+      print(d, n);
       printf("test0 %d %d\n", d[j], d[j+1]);
     }
     assert(d[j] +1 == d[j + 1]);
