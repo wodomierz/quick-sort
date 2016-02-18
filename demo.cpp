@@ -1,17 +1,22 @@
-#include "quick_sort.h"
 #include <cstdio>
 #include <cstdlib> 
 #include <cassert>
 #include <climits> 
 #include <sys/mman.h>
 
+// #include "quick_sort.h"
+
+
 using namespace std;
 
+int* quick_sort_bitonic_merge(int* to_sort, int size);
 void test0();
 void test1();
 void test2();
 void test3();
 void test_big();
+void test_big2();
+void test_small();
 
 void print(int *tab, int n){
   for (int i = 0; i < n; ++i) {
@@ -21,10 +26,11 @@ void print(int *tab, int n){
 
 int main(){
   test0();
-  // test1();
-  // test2();
-  // test3();
-  // test_big();
+  test1();
+  test2();
+  test3();
+  test_small();
+  test_big();
   return 0;
 }
 
@@ -34,7 +40,9 @@ void test0() {
   for (int j=0; j<n; ++j) {
       c[j] = n-j;
   }
-  int* d = quick_sort(c, n);
+  int* d = quick_sort_bitonic_merge(c, n);
+
+  // print(d, n);
   for (int j=0; j<(n-1); ++j) {
     if (d[j] > d[j + 1]) {
       print(d, n);
@@ -58,7 +66,7 @@ void test1() {
   for (int j=0; j<n; ++j){
       c[j] = rand();
   }
-  int* d = quick_sort(c, n);
+  int* d = quick_sort_bitonic_merge(c, n);
   for (int j=0; j<(n-1); ++j) {
       if (d[j] > d[j + 1]) {
         printf("test1 %d %d\n", d[j], d[j+1]);
@@ -77,7 +85,7 @@ void test2() {
   for (int j=0; j<n; ++j){
       c[j] = rand();
   }
-  int* d = quick_sort(c, n);
+  int* d = quick_sort_bitonic_merge(c, n);
   for (int j=0; j<(n-1); ++j) {
       if (d[j] > d[j + 1]) {
         printf("test2 %d %d\n", d[j], d[j+1]);
@@ -93,9 +101,9 @@ void test3() {
   int n = 10899;
   int *c = (int*) malloc(n*sizeof(int));
   for (int j=0; j<n; ++j){
-      c[j] = rand();
+      c[j] = n-j;
   }
-  int* d = quick_sort(c, n);
+  int* d = quick_sort_bitonic_merge(c, n);
   for (int j=0; j<(n-1); ++j) {
       if (d[j] > d[j + 1]) {
         printf("test3 %d %d\n", d[j], d[j+1]);
@@ -105,6 +113,30 @@ void test3() {
   printf("test3 ok\n");
   free(c);
   free(d);
+}
+
+
+void test_small() {
+  int times = 1;
+  int min = 3;
+  int max = 1024;
+  while (times++ < 50) {
+    int n = min + (rand() % (int)(max - min + 1));
+    int *c = (int*) malloc(n*sizeof(int));
+    for (int j=0; j<n; ++j) {
+      c[j] = n - j;
+    }
+    int* d = quick_sort_bitonic_merge(c, n);
+    for (int j=0; j<(n-1); ++j) {
+      if (d[j] > d[j + 1]) {
+        printf("testsmall%d %d %d\n", times, d[j], d[j+1]);
+      } 
+      assert(d[j] <= d[j + 1]);
+    }
+    free(c);
+    free(d);
+  }  
+  printf("testsmall ok\n");
 }
 
 void test_big() {
@@ -117,7 +149,31 @@ void test_big() {
     for (int j=0; j<n; ++j) {
       c[j] = rand();
     }
-    int* d = quick_sort(c, n);
+    int* d = quick_sort_bitonic_merge(c, n);
+    for (int j=0; j<(n-1); ++j) {
+      if (d[j] > d[j + 1]) {
+        printf("testbig%d %d %d\n", times, d[j], d[j+1]);
+      } 
+      assert(d[j] <= d[j + 1]);
+    }
+    free(c);
+    free(d);
+  }  
+  printf("testbig ok\n");
+}
+
+void test_big2() {
+  int times = 1;
+  int min = 200;
+  int max = 1024;
+  while (times++ < 50) {
+    int n = min + (rand() % (int)(max - min + 1));
+    n*=1024;
+    int *c = (int*) malloc(n*sizeof(int));
+    for (int j=0; j<n; ++j) {
+      c[j] = rand();
+    }
+    int* d = quick_sort_bitonic_merge(c, n);
     for (int j=0; j<(n-1); ++j) {
       if (d[j] > d[j + 1]) {
         printf("testbig%d %d %d\n", times, d[j], d[j+1]);

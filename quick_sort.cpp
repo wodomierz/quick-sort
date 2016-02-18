@@ -1,4 +1,4 @@
-#include "cuda.h"
+#include <cuda.h>
 #include <cstdio>
 #include <iostream>
 #include <cstring>
@@ -13,20 +13,23 @@ using namespace std;
 
 void print_error(CUresult res);
 
-int* quick_sort(int* to_sort, int size){
-    cuInit(0);
-    CUdevice cuDevice;
-    CUresult res = cuDeviceGet(&cuDevice, 0);
-    if (res != CUDA_SUCCESS){
-        printf("cannot acquire device 0\n");
-        exit(1);
-    }
-    CUcontext cuContext;
-    res = cuCtxCreate(&cuContext, 0, cuDevice);
-    if (res != CUDA_SUCCESS){
-        printf("cannot create Kontext\n");
-        exit(1);
-    }
+
+//sort each 1024 block
+void quick_sort(CUdeviceptr device_to_sort, int size, CUdeviceptr result_array) {
+    // cuInit(0);
+    // CUdevice cuDevice;
+    CUresult res;
+    // res = cuDeviceGet(&cuDevice, 0);
+    // if (res != CUDA_SUCCESS){
+    //     printf("cannot acquire device 0\n");
+    //     exit(1);
+    // }
+    // CUcontext cuContext;
+    // res = cuCtxCreate(&cuContext, 0, cuDevice);
+    // if (res != CUDA_SUCCESS){
+    //     printf("cannot create Context\n");
+    //     exit(1);
+    // }
 
     CUmodule cuModule = (CUmodule)0;
     res = cuModuleLoad(&cuModule, "quick_sort.ptx");
@@ -48,11 +51,11 @@ int* quick_sort(int* to_sort, int size){
 
     
 
-    int* result = (int*) malloc(sizeof(int) * size);
-    cuMemHostRegister((void*) result, size*sizeof(int), 0);
-    cuMemHostRegister((void*) to_sort, size*sizeof(int), 0);
+    // int* result = (int*) malloc(sizeof(int) * size);
+    // cuMemHostRegister((void*) result, size*sizeof(int), 0);
+    // cuMemHostRegister((void*) to_sort, size*sizeof(int), 0);
 
-    CUdeviceptr device_to_sort;
+    // CUdeviceptr device_to_sort;
     CUdeviceptr height;
     CUdeviceptr tree_size;
     CUdeviceptr parent;
@@ -60,10 +63,10 @@ int* quick_sort(int* to_sort, int size){
     CUdeviceptr right;
     CUdeviceptr computed;
     CUdeviceptr sth_changed;
-    CUdeviceptr result_array;
+    // CUdeviceptr result_array;
     CUdeviceptr indexes;
-
-    cuMemAlloc(&device_to_sort, size*sizeof(int));
+    // CUdeviceptr root;
+    // cuMemAlloc(&device_to_sort, size*sizeof(int));
     cuMemAlloc(&height, size*sizeof(int));
     cuMemAlloc(&tree_size, size*sizeof(int));
     cuMemAlloc(&parent, size*sizeof(int));
@@ -71,14 +74,17 @@ int* quick_sort(int* to_sort, int size){
     cuMemAlloc(&right, size*sizeof(int));
     cuMemAlloc(&computed, size*sizeof(bool));
     cuMemAlloc(&sth_changed, sizeof(bool));
-    cuMemAlloc(&result_array, size*sizeof(int));
+    // cuMemAlloc(&result_array, size*sizeof(int));
     cuMemAlloc(&indexes, size*sizeof(int));
+    // cuMemAlloc(&root, sizeof(int));
 
-    print_error(cuMemcpyHtoD(device_to_sort, (void*) to_sort, size * sizeof(int)));
+    // print_error(cuMemcpyHtoD(device_to_sort, (void*) to_sort, size * sizeof(int)));
 
+    srand( time( NULL ) );
+    int root = (rand() % THREADS_IN_BLOCK);
 
-    int root = (rand() % size);
-    printf("root %d\n", root);
+    // printf("root %d\n", root);
+
 
     void* init_args[8] =  { &parent, &left, &right, &tree_size, &height, &computed, &size, &root};
     void* sort_args[9] =  { &device_to_sort, &parent, &left, &right, &tree_size, &height, &computed, &sth_changed, &size};
@@ -123,10 +129,11 @@ int* quick_sort(int* to_sort, int size){
 
    
     
-    print_error(cuMemcpyDtoH((void*)result, result_array, size * sizeof(int)));
+    // print_error(cuMemcpyDtoH((void*)result, result_array, size * sizeof(int)));
 
 
-    cuMemFree(device_to_sort);
+    // cuMemFree(device_to_sort);
+    // cuMemFree(root);
     cuMemFree(height);
     cuMemFree(tree_size);
     cuMemFree(parent);
@@ -134,13 +141,13 @@ int* quick_sort(int* to_sort, int size){
     cuMemFree(right);
     cuMemFree(computed);
     cuMemFree(sth_changed);
-    cuMemFree(result_array);
+    // cuMemFree(result_array);
     cuMemFree(indexes);
 
-    cuMemHostUnregister(result);
-    cuMemHostUnregister(to_sort);
-    cuCtxDestroy(cuContext);
-    return result;
+    // cuMemHostUnregister(result);
+    // cuMemHostUnregister(to_sort);
+    // cuCtxDestroy(cuContext);
+    // return result;
 }
 
 void print_error(CUresult res) {

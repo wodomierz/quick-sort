@@ -1,6 +1,7 @@
-#if !defined(QUICK_SORT_H)
-#define QUICK_SORT_H 1
+#if !defined(BITONIC_SORT_H)
+#define BITONIC_SORT_H 1
 
-int* quick_sort(int*, int);
+int* quick_sort_bitonic_merge(int*, int);
+void quick_sort(CUdeviceptr device_to_sort, int size, CUdeviceptr result_array);
 
 #endif

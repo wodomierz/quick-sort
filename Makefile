@@ -11,8 +11,8 @@ NVCC  := $(CUDA_INSTALL_PATH)/bin/nvcc -ccbin $(CCPATH)
 INCLUDES = -I. -I$(CUDA_INSTALL_PATH)/include
 
 # Libraries
-LIB_CUDA := -lcuda
-
+#LIB_CUDA := -lcuda
+LIB_CUDA := -L/usr/lib/nvidia-current -lcuda
 
 # Options
 NVCCOPTIONS = -arch sm_20 -ptx
@@ -25,8 +25,8 @@ CFLAGS += $(COMMONFLAGS)
 
 
 
-CUDA_OBJS = quick_sort.ptx 
-OBJS = demo.cpp.o quick_sort.cpp.o
+CUDA_OBJS = quick_sort.ptx bitonic_sort.ptx
+OBJS = demo.cpp.o quick_sort.cpp.o bitonic_sort.cpp.o
 TARGET = solution.x
 LINKLINE = $(LINK) -o $(TARGET) $(OBJS) $(LIB_CUDA)
 

@@ -12,11 +12,20 @@ static int THREADS_IN_BLOCK = 1024;
 
 __global__
 void init(int* parent, int* right, int* left, int* tree_size, int* height, bool* computed, int size, int root) {
-
-	int thid = blockIdx.x * blockDim.x + threadIdx.x;	
+	int thid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (thid >= size) {
 		return;
 	}
+
+	root = blockIdx.x * blockDim.x + root;
+	if (root >= size) {
+		root = blockIdx.x * blockDim.x;
+	}
+
+	// __syncthreads();
+	// atomicExch(root_adress + blockIdx, thid);
+	// __syncthreads();
+
 	if (thid == root) {
 		computed[thid] = true;
 		parent[thid] = -1;
@@ -89,19 +98,19 @@ void quick_sort(int* to_sort, int* parent, int* left, int* right, int* tree_size
 
 __global__
 void tree_to_array(int* tree, int* array, int* indexes, int* parent, int* left, int* tree_size, int* height, int h, bool* sth_changed, int size) {
-	int thid = blockIdx.x * blockDim.x + threadIdx.x;	
+	int thid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (thid >= size || height[thid] != h) {
 		return;
 	}
 	*sth_changed = true;
-	int index_in_array = 0;
+	int index_in_array = blockIdx.x * blockDim.x;
 	int left_child = left[thid];
 	int parent_id = parent[thid];
 
 	//I am root
 	if (parent_id == -1) {
 		if (left_child != -1) {
-			index_in_array = tree_size[left_child];
+			index_in_array += tree_size[left_child];
 		}
 		array[index_in_array] = tree[thid];
 		indexes[thid] = index_in_array;
