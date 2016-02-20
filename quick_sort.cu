@@ -22,7 +22,7 @@ void init(int* parent, int* right, int* left, int* tree_size, int* height, bool*
 		// root = blockIdx.x * blockDim.x;
 	// }
 
-	__syncthreads();
+	// __syncthreads();
 	atomicExch(roots + blockIdx.x, thid);
 	__syncthreads();
 
@@ -63,7 +63,7 @@ void quick_sort(int* to_sort, int* parent, int* left, int* right, int* tree_size
 
 
 
-	__syncthreads();
+	// __syncthreads();
 	if (is_left) atomicExch(left + parent_id, thid);
 	__syncthreads();
 
@@ -81,7 +81,7 @@ void quick_sort(int* to_sort, int* parent, int* left, int* right, int* tree_size
 		return;
 	}
 
-	__syncthreads();
+	// __syncthreads();
 	atomicExch(right + parent_id, thid);
 	__syncthreads();
 
